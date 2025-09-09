@@ -3,184 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <title>Ping 监控历史</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 使用 ECharts，国内可访问 CDN -->
+    <script src="https://cdn.staticfile.org/echarts/5.4.3/echarts.min.js"></script>
 </head>
 <style>
-        .topbar {
-            position: absolute;
-            top: 18px;
-            right: 32px;
-            display: flex;
-            gap: 18px;
-            align-items: center;
-            z-index: 10;
-        }
-        .topbar a {
-            color: #3498db;
-            font-weight: 500;
-            text-decoration: none;
-            font-size: 1.08em;
-            transition: color 0.2s;
-        }
-        .topbar a:hover {
-            color: #217dbb;
-            text-decoration: underline;
-        }
-        .topbar-btn {
-            background: #f8fafc;
-            border: 1px solid #d1d5db;
-            border-radius: 7px;
-            padding: 5px 14px;
-            cursor: pointer;
-            font-size: 1em;
-            color: #34495e;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        .topbar-btn:hover {
-            background: #e3eaf2;
-        }
-        #queryForm {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-        #ipCheckboxList {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .card canvas {
-            width: 100% !important;
-            max-width: 800px;
-            height: 300px !important;
-            margin: 0 auto;
-            display: block;
-        }
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            margin-top: 10px;
-            justify-content: center;
-        }
-        .btn {
-            width: 120px;
-            font-size: 1.05em;
-            padding: 7px 0;
-            border-radius: 7px;
-            border: 1px solid #d1d5db;
-            background: #3498db;
-            color: #fff;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        .btn:hover {
-            background: #217dbb;
-        }
+/* 所有样式已移至<head>，不放在body */
+    .topbar {
+        position: absolute;
+        top: 18px;
+        right: 32px;
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        z-index: 10;
+    }
+    .topbar a {
+        color: #3498db;
+        font-weight: 500;
+        text-decoration: none;
+        font-size: 1.08em;
+        transition: color 0.2s;
+    }
+    .topbar a:hover {
+        color: #217dbb;
+        text-decoration: underline;
+    }
+    .topbar-btn {
+        background: #f8fafc;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        padding: 5px 14px;
+        cursor: pointer;
+        font-size: 1em;
+        color: #34495e;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+    .topbar-btn:hover {
+        background: #e3eaf2;
+    }
+    #queryForm {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    #ipCheckboxList {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        padding: 24px 32px;
+        margin-bottom: 24px;
+    }
+    .card-title {
+        font-size: 1.1em;
+        color: #34495e;
+        margin-bottom: 12px;
+        font-weight: 600;
+    }
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+        justify-content: center;
+    }
+    .btn {
+        width: 120px;
+        font-size: 1.05em;
+        padding: 7px 0;
+        border-radius: 7px;
+        border: 1px solid #d1d5db;
+        background: #3498db;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+    .btn:hover {
+        background: #217dbb;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 12px;
+    }
+    @media (max-width: 900px) {
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 12px;
+            max-width: 100%;
         }
-        @media (max-width: 900px) {
-            .container {
-                max-width: 100%;
-            }
-        }
-        .ip-checkbox-scroll {
-            max-height: 180px;
-            overflow-y: auto;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e3eaf2;
-            padding: 8px;
-        }
-        .ip-checkbox-label {
-            display: flex;
-            align-items: center;
-            background: #f8fafc;
-            border: 1px solid #e3eaf2;
-            border-radius: 7px;
-            padding: 6px 12px;
-            cursor: pointer;
-            margin-bottom: 6px;
-        }
-        body {
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            background: #f6f8fa;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            text-align: left;
-            color: #2c3e50;
-            margin: 32px 0 16px 32px;
-            font-size: 2rem;
-        }
-        .card {
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-            padding: 24px 32px;
-            margin-bottom: 24px;
-        }
-        .card-title {
-            font-size: 1.1em;
-            color: #34495e;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-        #queryForm {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 18px;
-            align-items: center;
-            margin: 0 0 12px 0;
-            padding: 0;
-            background: none;
-            box-shadow: none;
-            border-radius: 0;
-        }
-        label {
-            font-weight: 500;
-            color: #34495e;
-            margin-right: 6px;
-        }
-        select, button {
-            padding: 7px 14px;
-            border-radius: 7px;
-            border: 1px solid #d1d5db;
-            font-size: 1em;
-            background: #f8fafc;
-        }
-        button {
-            background: #3498db;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-weight: 500;
-        }
-        button:hover {
-            background: #217dbb;
-        }
-        #pingChart {
-            display: block;
-            margin: 0 auto;
-            background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-            padding: 18px;
-            max-width: 900px;
-        }
-        .divider {
-            height: 1px;
-            background: #e3eaf2;
-            margin: 24px 0;
-            border: none;
-        }
-    </style>
+    }
+    .ip-checkbox-scroll {
+        max-height: 180px;
+        overflow-y: auto;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e3eaf2;
+        padding: 8px;
+    }
+    .ip-checkbox-label {
+        display: flex;
+        align-items: center;
+        background: #f8fafc;
+        border: 1px solid #e3eaf2;
+        border-radius: 7px;
+        padding: 6px 12px;
+        cursor: pointer;
+        margin-bottom: 6px;
+    }
+    body {
+        font-family: 'Segoe UI', 'Arial', sans-serif;
+        background: #f6f8fa;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        text-align: left;
+        color: #2c3e50;
+        margin: 32px 0 16px 32px;
+        font-size: 2rem;
+    }
+    label {
+        font-weight: 500;
+        color: #34495e;
+        margin-right: 6px;
+    }
+    select, button {
+        padding: 7px 14px;
+        border-radius: 7px;
+        border: 1px solid #d1d5db;
+        font-size: 1em;
+        background: #f8fafc;
+    }
+    button {
+        background: #3498db;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-weight: 500;
+    }
+    button:hover {
+        background: #217dbb;
+    }
+    .divider {
+        height: 1px;
+        background: #e3eaf2;
+        margin: 24px 0;
+        border: none;
+    }
+</style>
 </head>
 <body>
     <div class="topbar">
@@ -204,20 +179,39 @@
             </form>
         </div>
         <div class="divider"></div>
+        <style>
+            .offline-server-list {
+                color: #e74c3c;
+                font-weight: 600;
+                margin-top: 6px;
+            }
+            .offline-server-online {
+                color: #27ae60;
+                font-weight: 600;
+                margin-top: 6px;
+            }
+        </style>
+
+
         <div class="card">
             <div class="card-title">延迟历史（1小时）</div>
-            <canvas id="pingChart1h" width="800" height="300"></canvas>
+            <div id="pingChart1h" style="width:100%;max-width:800px;height:400px;"></div>
         </div>
         <div class="card">
             <div class="card-title">延迟历史（24小时）</div>
-            <canvas id="pingChart24h" width="800" height="300"></canvas>
+            <div id="pingChart24h" style="width:100%;max-width:800px;height:300px;"></div>
         </div>
         <div class="card">
             <div class="card-title">延迟历史（1周）</div>
-            <canvas id="pingChart1w" width="800" height="300"></canvas>
+            <div id="pingChart1w" style="width:100%;max-width:800px;height:300px;"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">离线服务器</div>
+                <div id="offlineServerList" class="offline-server-list"></div>
         </div>
     </div>
     <script>
+        var showIp = window.localStorage.getItem('showIp') !== 'false';
     document.getElementById('selectAllBtn').onclick = function() {
         document.querySelectorAll('#ipCheckboxList input[type=checkbox]').forEach(cb => cb.checked = true);
     };
@@ -225,10 +219,10 @@
         document.querySelectorAll('#ipCheckboxList input[type=checkbox]').forEach(cb => cb.checked = false);
     };
     // 多IP展示与localStorage（多选下拉框）
-    const ctx1h = document.getElementById('pingChart1h').getContext('2d');
-    const ctx24h = document.getElementById('pingChart24h').getContext('2d');
-    const ctx1w = document.getElementById('pingChart1w').getContext('2d');
-    let chart1h, chart24h, chart1w;
+    // ECharts 图表实例
+    let chart1h = echarts.init(document.getElementById('pingChart1h'));
+    let chart24h = echarts.init(document.getElementById('pingChart24h'));
+    let chart1w = echarts.init(document.getElementById('pingChart1w'));
     let allIps = [];
     function getSelectedIps() {
         const checks = document.querySelectorAll('#ipCheckboxList input[type=checkbox]:checked');
@@ -237,7 +231,6 @@
     function renderIpCheckboxList() {
         const listDiv = document.getElementById('ipCheckboxList');
         listDiv.innerHTML = '';
-        const showIp = window.localStorage.getItem('showIp') !== 'false';
         allIps.forEach((item) => {
             let label = document.createElement('label');
             label.className = 'ip-checkbox-label';
@@ -255,11 +248,9 @@
     // 显隐IP按钮逻辑
     const toggleIpBtn = document.getElementById('toggleIpBtn');
     function updateIpBtnText() {
-        const showIp = window.localStorage.getItem('showIp') !== 'false';
         toggleIpBtn.textContent = showIp ? '隐藏IP' : '显示IP';
     }
     toggleIpBtn.onclick = function() {
-        const showIp = window.localStorage.getItem('showIp') !== 'false';
         window.localStorage.setItem('showIp', showIp ? 'false' : 'true');
         renderIpCheckboxList();
         updateIpBtnText();
@@ -278,78 +269,126 @@
         e.preventDefault();
         let selectedIps = getSelectedIps();
         if(selectedIps.length === 0) return;
-        // 并发请求三个图表
-        await Promise.all([
-            drawChart(selectedIps, 'hour', chart1h, ctx1h, v => chart1h = v),
-            drawChart(selectedIps, 'day', chart24h, ctx24h, v => chart24h = v),
-            drawChart(selectedIps, 'week', chart1w, ctx1w, v => chart1w = v)
+        // 并发请求三个图表和离线服务器
+        const [data1h, data24h, data1w] = await Promise.all([
+            fetch(`/history?ips=${selectedIps.join(',')}&period=hour`).then(r=>r.json()),
+            fetch(`/history?ips=${selectedIps.join(',')}&period=day`).then(r=>r.json()),
+            fetch(`/history?ips=${selectedIps.join(',')}&period=week`).then(r=>r.json())
         ]);
+        drawEChart(selectedIps, data1h, chart1h, '1小时');
+        drawEChart(selectedIps, data24h, chart24h, '24小时');
+        drawEChart(selectedIps, data1w, chart1w, '1周');
+        showOfflineServers(selectedIps, data1h);
     };
 
-    async function drawChart(selectedIps, period, chart, ctx, setChart) {
-        let datasets = [];
-        let labels = [];
-        const res = await fetch(`/history?ips=${selectedIps.join(',')}&period=${period}`);
-        const allData = await res.json();
-        const showIp = window.localStorage.getItem('showIp') !== 'false';
-        selectedIps.forEach((ip, i) => {
-            const item = allIps.find(x => x.ip === ip);
+    function drawEChart(selectedIps, allData, chart, periodLabel) {
+        let series = [];
+        let legend = [];
+
+        // 统一 key 生成，确保 xAxis 的标签与 series 数据对齐
+        function makeKey(ts) {
+            const dt = new Date(ts);
+            if (periodLabel === '1小时') {
+                return dt.getHours().toString().padStart(2, '0') + ':00';
+            }
+            // 24小时 / 1周 使用 月-日
+            return (dt.getMonth() + 1).toString().padStart(2, '0') + '-' + dt.getDate().toString().padStart(2, '0');
+        }
+
+        // 收集所有 keys 并为每个 key 记录最早出现的时间戳用于排序
+        const allKeys = [];
+        const keyToTs = {};
+        selectedIps.forEach(ip => {
             const data = allData[ip] || [];
-            if(i===0) labels = data.map(row => row[3]);
-            datasets.push({
-                label: showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || ''),
-                data: data.map(row => row[2]),
-                borderColor: `hsl(${i*60},70%,50%)`,
-                fill: false
+            data.forEach(row => {
+                if (!row || row.length < 4) return;
+                const k = makeKey(row[3]);
+                allKeys.push(k);
+                if (!keyToTs[k] || new Date(row[3]) < new Date(keyToTs[k])) keyToTs[k] = row[3];
             });
         });
-        if(chart) chart.destroy();
-        setChart(new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: datasets
+        const uniqKeys = Array.from(new Set(allKeys));
+        // 按真实时间排序
+        uniqKeys.sort((a, b) => new Date(keyToTs[a]) - new Date(keyToTs[b]));
+        const xLabels = uniqKeys;
+
+        // 为每个选中 IP 构建数据列
+        selectedIps.forEach(ip => {
+            const item = allIps.find(x => x.ip === ip) || { ip };
+            const data = allData[ip] || [];
+            const dataMap = {};
+            data.forEach(row => {
+                if (!row || row.length < 4) return;
+                const k = makeKey(row[3]);
+                dataMap[k] = row[2] === null || row[2] === undefined ? null : row[2];
+            });
+            const seriesData = xLabels.map(k => dataMap.hasOwnProperty(k) ? dataMap[k] : null);
+            const name = showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || '');
+            legend.push(name);
+            series.push({ name, type: 'line', data: seriesData, smooth: true, lineStyle: { width: 2 }, showSymbol: false });
+        });
+
+        // 计算 axisLabel 的 interval 和 rotate，避免重叠
+        const maxVisible = 6;
+        let interval = 0;
+        if (xLabels.length > maxVisible) interval = Math.ceil(xLabels.length / maxVisible) - 1;
+        const rotate = xLabels.length > 8 ? 30 : 0;
+
+        chart.setOption({
+            title: { text: `延迟历史（${periodLabel}）`, left: 'center', textStyle: { fontSize: 16 } },
+            tooltip: { trigger: 'axis' },
+            legend: { data: legend, top: 30, type: 'scroll' },
+            // 为竖直的 y 轴名称留出更多左侧空间，避免被裁剪
+            grid: { left: 80, right: 20, top: 60, bottom: 60 },
+            // 去掉 x 轴名称，保留刻度显示（通过 interval/rotate 防止重叠）
+            xAxis: { type: 'category', data: xLabels, axisLabel: { interval: interval, rotate: rotate } },
+            // 将 y 轴名称放到侧面并旋转为竖排（居中显示）
+            yAxis: {
+                type: 'value',
+                name: '延迟(ms)',
+                nameLocation: 'middle',
+                nameGap: 48,
+                nameRotate: 90,
+                nameTextStyle: { fontSize: 12 },
             },
-            options: {
-                scales: {
-                    x: {
-                        display: true,
-                        title: { display: true, text: '时间' },
-                        ticks: {
-                            autoSkip: true,
-                            maxTicksLimit: 5
-                        }
-                    },
-                    y: { display: true, title: { display: true, text: '延迟(ms)' } }
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            generateLabels: function(chart) {
-                                const showIp = window.localStorage.getItem('showIp') !== 'false';
-                                return chart.data.datasets.map((ds, i) => ({
-                                    text: ds.label,
-                                    fillStyle: ds.borderColor,
-                                    strokeStyle: ds.borderColor,
-                                    lineWidth: 2,
-                                    hidden: !chart.isDatasetVisible(i),
-                                    index: i
-                                }));
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y;
-                            }
-                        }
-                    }
-                }
-            }
-        }));
+            series: series
+        }, { notMerge: false });
     }
+
+    function showOfflineServers(selectedIps, allData) {
+        // 离线定义：最新数据为None或获取不到
+        let offline = selectedIps.filter(ip => {
+            const data = allData[ip];
+            if(!data || data.length === 0) return true;
+            // 最新一条数据
+            const last = data[data.length-1];
+            // 有些后端会返回字符串 'None'，或者 null/undefined。认为有明确数值（number）则在线，否则离线
+            return !last || last[2] === null || last[2] === undefined || last[2] === 'None' || (typeof last[2] !== 'number' && isNaN(Number(last[2])));
+        });
+        const offlineDiv = document.getElementById('offlineServerList');
+        console.log('离线服务器:', offline);
+        if(offline.length === 0) {
+            offlineDiv.textContent = '全部在线';
+                offlineDiv.className = 'offline-server-online';
+        } else {
+            offlineDiv.innerHTML = offline.map(ip => {
+                const item = allIps.find(x => x.ip === ip);
+                return showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || '');
+            }).join('<br>');
+                offlineDiv.className = 'offline-server-list';
+        }
+    }
+    // resize 处理，避免容器变化后图表不自适应
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        // 防抖
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            try { chart1h.resize(); } catch (e) {}
+            try { chart24h.resize(); } catch (e) {}
+            try { chart1w.resize(); } catch (e) {}
+        }, 150);
+    });
     // 页面加载自动查询
     document.getElementById('queryForm').dispatchEvent(new Event('submit'));
     </script>

@@ -42,7 +42,7 @@ def query_history(db_file, ip_address, period):
     sql = ''' SELECT * FROM ping_results WHERE ip_address = ? AND timestamp >= datetime('now', ?) '''
     cur = conn.cursor()
     if period == 'day':
-        cur.execute(sql, (ip_address, '-1 day'))
+        cur.execute(sql, (ip_address, '-1 days'))
     elif period == 'week':
         cur.execute(sql, (ip_address, '-7 days'))
     elif period == 'month':

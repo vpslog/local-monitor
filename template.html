@@ -283,10 +283,10 @@
     function drawEChart(selectedIps, allData, chart, periodLabel) {
         let series = [];
         let legend = [];
+        // row[3] 必须为 UTC 格式字符串，new Date(row[3]) 会自动转为本地时间
         selectedIps.forEach(ip => {
             const item = allIps.find(x => x.ip === ip) || { ip };
             const data = allData[ip] || [];
-            // 构建 [时间,值] 数组，过滤无效值
             const seriesData = data
                 .filter(row => row && row.length >= 4 && row[2] !== undefined && row[2] !== null && row[2] !== 'None')
                 .map(row => [new Date(row[3]), row[2]]);

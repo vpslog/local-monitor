@@ -38,7 +38,8 @@ def get_ip_list_full():
 def monitor():
     while True:
         ip_list = get_ip_list_full()
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 统一用 UTC 时间
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         for item in ip_list:
             ip = item["ip"]
             latency = ping_ip(ip)
@@ -58,13 +59,11 @@ def history():
     period = request.args.get("period", "day")
     if ips:
         ip_list = ips.split(",")
-        result = {}
-        for ip in ip_list:
-            result[ip] = query_history(DATABASE, ip, period)
+        result = query_history(DATABASE, ip_list, period)
         return jsonify(result)
     else:
         ip = request.args.get("ip")
-        data = query_history(DATABASE, ip, period)
+        data = query_history(DATABASE, [ip], period)
         return jsonify(data)
 
 def start_monitor():

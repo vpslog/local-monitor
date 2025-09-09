@@ -194,16 +194,13 @@
 
 
         <div class="card">
-            <div class="card-title">延迟历史（1小时）</div>
             <div id="pingChart1h" style="width:100%;max-width:800px;height:400px;"></div>
         </div>
         <div class="card">
-            <div class="card-title">延迟历史（24小时）</div>
-            <div id="pingChart24h" style="width:100%;max-width:800px;height:300px;"></div>
+            <div id="pingChart24h" style="width:100%;max-width:800px;height:400px;"></div>
         </div>
         <div class="card">
-            <div class="card-title">延迟历史（1周）</div>
-            <div id="pingChart1w" style="width:100%;max-width:800px;height:300px;"></div>
+            <div id="pingChart1w" style="width:100%;max-width:800px;height:400px;"></div>
         </div>
         <div class="card">
             <div class="card-title">离线服务器</div>
@@ -321,7 +318,10 @@
             // 最新一条数据
             const last = data[data.length-1];
             // 有些后端会返回字符串 'None'，或者 null/undefined。认为有明确数值（number）则在线，否则离线
-            return !last;
+            if (!last || last[2] === null || last[2] === undefined || last[2] === 'None') return true;
+            // 不是数字也视为离线
+            if (typeof last[2] !== 'number' && isNaN(Number(last[2]))) return true;
+            return false;
         });
         const offlineDiv = document.getElementById('offlineServerList');
         console.log('离线服务器:', offline);
@@ -332,7 +332,7 @@
             offlineDiv.innerHTML = offline.map(ip => {
                 const item = allIps.find(x => x.ip === ip);
                 return showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || '');
-            }).join('<br>');
+            }).join(', ');
                 offlineDiv.className = 'offline-server-list';
         }
     }

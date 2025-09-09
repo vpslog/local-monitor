@@ -38,10 +38,10 @@ def get_ip_list_full():
 def monitor():
     while True:
         ip_list = get_ip_list_full()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         for item in ip_list:
             ip = item["ip"]
             latency = ping_ip(ip)
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             insert_ping_result(DATABASE, ip, latency, timestamp)
         time.sleep(PING_INTERVAL)
 

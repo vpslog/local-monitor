@@ -281,76 +281,34 @@
         showOfflineServers(selectedIps, data1h);
     };
 
+
+    // 全新曲线展示方法
     function drawEChart(selectedIps, allData, chart, periodLabel) {
         let series = [];
         let legend = [];
-
-        // 统一 key 生成，确保 xAxis 的标签与 series 数据对齐
-        function makeKey(ts) {
-            const dt = new Date(ts);
-            if (periodLabel === '1小时') {
-                return dt.getHours().toString().padStart(2, '0') + ':00';
-            }
-            // 24小时 / 1周 使用 月-日
-            return (dt.getMonth() + 1).toString().padStart(2, '0') + '-' + dt.getDate().toString().padStart(2, '0');
-        }
-
-        // 收集所有 keys 并为每个 key 记录最早出现的时间戳用于排序
-        const allKeys = [];
-        const keyToTs = {};
-        selectedIps.forEach(ip => {
-            const data = allData[ip] || [];
-            data.forEach(row => {
-                if (!row || row.length < 4) return;
-                const k = makeKey(row[3]);
-                allKeys.push(k);
-                if (!keyToTs[k] || new Date(row[3]) < new Date(keyToTs[k])) keyToTs[k] = row[3];
-            });
-        });
-        const uniqKeys = Array.from(new Set(allKeys));
-        // 按真实时间排序
-        uniqKeys.sort((a, b) => new Date(keyToTs[a]) - new Date(keyToTs[b]));
-        const xLabels = uniqKeys;
-
-        // 为每个选中 IP 构建数据列
         selectedIps.forEach(ip => {
             const item = allIps.find(x => x.ip === ip) || { ip };
             const data = allData[ip] || [];
-            const dataMap = {};
-            data.forEach(row => {
-                if (!row || row.length < 4) return;
-                const k = makeKey(row[3]);
-                dataMap[k] = row[2] === null || row[2] === undefined ? null : row[2];
-            });
-            const seriesData = xLabels.map(k => dataMap.hasOwnProperty(k) ? dataMap[k] : null);
+            // 构建 [时间,值] 数组，过滤无效值
+            const seriesData = data
+                .filter(row => row && row.length >= 4 && row[2] !== undefined && row[2] !== null && row[2] !== 'None')
+                .map(row => [new Date(row[3]), row[2]]);
             const name = showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || '');
             legend.push(name);
-            series.push({ name, type: 'line', data: seriesData, smooth: true, lineStyle: { width: 2 }, showSymbol: false });
+            series.push({ name, type: 'line', data: seriesData, smooth: true, showSymbol: false, lineStyle: { width: 2 } });
         });
-
-        // 计算 axisLabel 的 interval 和 rotate，避免重叠
-        const maxVisible = 6;
-        let interval = 0;
-        if (xLabels.length > maxVisible) interval = Math.ceil(xLabels.length / maxVisible) - 1;
-        const rotate = xLabels.length > 8 ? 30 : 0;
 
         chart.setOption({
             title: { text: `延迟历史（${periodLabel}）`, left: 'center', textStyle: { fontSize: 16 } },
-            tooltip: { trigger: 'axis' },
+            tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
             legend: { data: legend, top: 30, type: 'scroll' },
-            // 为竖直的 y 轴名称留出更多左侧空间，避免被裁剪
-            grid: { left: 80, right: 20, top: 60, bottom: 60 },
-            // 去掉 x 轴名称，保留刻度显示（通过 interval/rotate 防止重叠）
-            xAxis: { type: 'category', data: xLabels, axisLabel: { interval: interval, rotate: rotate } },
-            // 将 y 轴名称放到侧面并旋转为竖排（居中显示）
-            yAxis: {
-                type: 'value',
-                name: '延迟(ms)',
-                nameLocation: 'middle',
-                nameGap: 48,
-                nameRotate: 90,
-                nameTextStyle: { fontSize: 12 },
-            },
+            grid: { left: 60, right: 20, top: 60, bottom: 60 },
+            xAxis: { type: 'time' },
+            yAxis: { type: 'value', name: '延迟(ms)', nameLocation: 'middle', nameGap: 48, nameRotate: 90, nameTextStyle: { fontSize: 12 } },
+            dataZoom: [
+                { type: 'slider', show: true, xAxisIndex: 0, start: 0, end: 100, height: 18, bottom: 10 },
+                { type: 'inside', xAxisIndex: 0 }
+            ],
             series: series
         }, { notMerge: false });
     }
@@ -363,7 +321,7 @@
             // 最新一条数据
             const last = data[data.length-1];
             // 有些后端会返回字符串 'None'，或者 null/undefined。认为有明确数值（number）则在线，否则离线
-            return !last || last[2] === null || last[2] === undefined || last[2] === 'None' || (typeof last[2] !== 'number' && isNaN(Number(last[2])));
+            return !last;
         });
         const offlineDiv = document.getElementById('offlineServerList');
         console.log('离线服务器:', offline);

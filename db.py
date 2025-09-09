@@ -45,8 +45,8 @@ def query_history(db_file, ip_address, period):
         cur.execute(sql, (ip_address, '-1 days'))
     elif period == 'week':
         cur.execute(sql, (ip_address, '-7 days'))
-    elif period == 'month':
-        cur.execute(sql, (ip_address, '-30 days'))
+    elif period == 'hour':
+        cur.execute(sql, (ip_address, '-1 hour'))
     else:
         conn.close()
         return []

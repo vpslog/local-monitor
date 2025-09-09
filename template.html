@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <title>Ping 监控历史</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<style>
+        .topbar {
+            position: absolute;
+            top: 18px;
+            right: 32px;
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            z-index: 10;
+        }
+        .topbar a {
+            color: #3498db;
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 1.08em;
+            transition: color 0.2s;
+        }
+        .topbar a:hover {
+            color: #217dbb;
+            text-decoration: underline;
+        }
+        .topbar-btn {
+            background: #f8fafc;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            padding: 5px 14px;
+            cursor: pointer;
+            font-size: 1em;
+            color: #34495e;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .topbar-btn:hover {
+            background: #e3eaf2;
+        }
+        #queryForm {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        #ipCheckboxList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card canvas {
+            width: 100% !important;
+            max-width: 800px;
+            height: 300px !important;
+            margin: 0 auto;
+            display: block;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .btn {
+            width: 120px;
+            font-size: 1.05em;
+            padding: 7px 0;
+            border-radius: 7px;
+            border: 1px solid #d1d5db;
+            background: #3498db;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #217dbb;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 12px;
+        }
+        @media (max-width: 900px) {
+            .container {
+                max-width: 100%;
+            }
+        }
+        .ip-checkbox-scroll {
+            max-height: 180px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e3eaf2;
+            padding: 8px;
+        }
+        .ip-checkbox-label {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #e3eaf2;
+            border-radius: 7px;
+            padding: 6px 12px;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: #f6f8fa;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: left;
+            color: #2c3e50;
+            margin: 32px 0 16px 32px;
+            font-size: 2rem;
+        }
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 24px 32px;
+            margin-bottom: 24px;
+        }
+        .card-title {
+            font-size: 1.1em;
+            color: #34495e;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        #queryForm {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            align-items: center;
+            margin: 0 0 12px 0;
+            padding: 0;
+            background: none;
+            box-shadow: none;
+            border-radius: 0;
+        }
+        label {
+            font-weight: 500;
+            color: #34495e;
+            margin-right: 6px;
+        }
+        select, button {
+            padding: 7px 14px;
+            border-radius: 7px;
+            border: 1px solid #d1d5db;
+            font-size: 1em;
+            background: #f8fafc;
+        }
+        button {
+            background: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #217dbb;
+        }
+        #pingChart {
+            display: block;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            padding: 18px;
+            max-width: 900px;
+        }
+        .divider {
+            height: 1px;
+            background: #e3eaf2;
+            margin: 24px 0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="https://github.com/vpslog/local-monitor" target="_blank">GitHub</a>
+        <a href="https://t.me/vpslognet" target="_blank">Telegram</a>
+        <button class="topbar-btn" id="toggleIpBtn">隐藏IP</button>
+    </div>
+    <div class="container">
+        <h1>节点监控</h1>
+        <div class="card">
+            <div class="card-title">选择IP</div>
+            <form id="queryForm" style="display:flex;flex-direction:column;gap:18px;">
+                <div class="ip-checkbox-scroll">
+                    <div id="ipCheckboxList"></div>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn" id="selectAllBtn">全选</button>
+                    <button type="button" class="btn" id="deselectAllBtn">全不选</button>
+                    <button type="submit" class="btn">查询</button>
+                </div>
+            </form>
+        </div>
+        <div class="divider"></div>
+        <div class="card">
+            <div class="card-title">延迟历史（1小时）</div>
+            <canvas id="pingChart1h" width="800" height="300"></canvas>
+        </div>
+        <div class="card">
+            <div class="card-title">延迟历史（24小时）</div>
+            <canvas id="pingChart24h" width="800" height="300"></canvas>
+        </div>
+        <div class="card">
+            <div class="card-title">延迟历史（1周）</div>
+            <canvas id="pingChart1w" width="800" height="300"></canvas>
+        </div>
+    </div>
+    <script>
+    document.getElementById('selectAllBtn').onclick = function() {
+        document.querySelectorAll('#ipCheckboxList input[type=checkbox]').forEach(cb => cb.checked = true);
+    };
+    document.getElementById('deselectAllBtn').onclick = function() {
+        document.querySelectorAll('#ipCheckboxList input[type=checkbox]').forEach(cb => cb.checked = false);
+    };
+    // 多IP展示与localStorage（多选下拉框）
+    const ctx1h = document.getElementById('pingChart1h').getContext('2d');
+    const ctx24h = document.getElementById('pingChart24h').getContext('2d');
+    const ctx1w = document.getElementById('pingChart1w').getContext('2d');
+    let chart1h, chart24h, chart1w;
+    let allIps = [];
+    function getSelectedIps() {
+        const checks = document.querySelectorAll('#ipCheckboxList input[type=checkbox]:checked');
+        return Array.from(checks).map(c => c.value);
+    }
+    function renderIpCheckboxList() {
+        const listDiv = document.getElementById('ipCheckboxList');
+        listDiv.innerHTML = '';
+        const showIp = window.localStorage.getItem('showIp') !== 'false';
+        allIps.forEach((item) => {
+            let label = document.createElement('label');
+            label.className = 'ip-checkbox-label';
+            let checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = item.ip;
+            checkbox.style.marginRight = '7px';
+            checkbox.checked = true;
+            label.appendChild(checkbox);
+            let txt = document.createElement('span');
+            txt.textContent = showIp ? (item.name ? `${item.name}（${item.ip}）` : item.ip) : (item.name || '');
+            label.appendChild(txt);
+            listDiv.appendChild(label);
+        });
+    // 显隐IP按钮逻辑
+    const toggleIpBtn = document.getElementById('toggleIpBtn');
+    function updateIpBtnText() {
+        const showIp = window.localStorage.getItem('showIp') !== 'false';
+        toggleIpBtn.textContent = showIp ? '隐藏IP' : '显示IP';
+    }
+    toggleIpBtn.onclick = function() {
+        const showIp = window.localStorage.getItem('showIp') !== 'false';
+        window.localStorage.setItem('showIp', showIp ? 'false' : 'true');
+        renderIpCheckboxList();
+        updateIpBtnText();
+    };
+    updateIpBtnText();
+    }
+    async function initIps() {
+        const res = await fetch('/api/ips');
+        allIps = await res.json();
+    renderIpCheckboxList();
+        document.getElementById('queryForm').dispatchEvent(new Event('submit'));
+    }
+    initIps();
+    // 查询并绘图
+    document.getElementById('queryForm').onsubmit = async function(e) {
+        e.preventDefault();
+        let selectedIps = getSelectedIps();
+        if(selectedIps.length === 0) return;
+        // 并发请求三个图表
+        await Promise.all([
+            drawChart(selectedIps, 'hour', chart1h, ctx1h, v => chart1h = v),
+            drawChart(selectedIps, 'day', chart24h, ctx24h, v => chart24h = v),
+            drawChart(selectedIps, 'week', chart1w, ctx1w, v => chart1w = v)
+        ]);
+    };
+
+    async function drawChart(selectedIps, period, chart, ctx, setChart) {
+        let datasets = [];
+        let labels = [];
+        const res = await fetch(`/history?ips=${selectedIps.join(',')}&period=${period}`);
+        const allData = await res.json();
+        const showIp = window.localStorage.getItem('showIp') !== 'false';
+        selectedIps.forEach((ip, i) => {
+            const item = allIps.find(x => x.ip === ip);
+            const data = allData[ip] || [];
+            if(i===0) labels = data.map(row => row[3]);
+            datasets.push({
+                label: showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || ''),
+                data: data.map(row => row[2]),
+                borderColor: `hsl(${i*60},70%,50%)`,
+                fill: false
+            });
+        });
+        if(chart) chart.destroy();
+        setChart(new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    x: {
+                        display: true,
+                        title: { display: true, text: '时间' },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 5
+                        }
+                    },
+                    y: { display: true, title: { display: true, text: '延迟(ms)' } }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            generateLabels: function(chart) {
+                                const showIp = window.localStorage.getItem('showIp') !== 'false';
+                                return chart.data.datasets.map((ds, i) => ({
+                                    text: ds.label,
+                                    fillStyle: ds.borderColor,
+                                    strokeStyle: ds.borderColor,
+                                    lineWidth: 2,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    index: i
+                                }));
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y;
+                            }
+                        }
+                    }
+                }
+            }
+        }));
+    }
+    // 页面加载自动查询
+    document.getElementById('queryForm').dispatchEvent(new Event('submit'));
+    </script>
+</body>
+</html>

@@ -10,8 +10,7 @@ from flask import Flask, render_template, request, jsonify
 import threading
 
 load_dotenv()
-# 统一用 os.environ 读取配置，支持 .env 文件和容器传参
-DATABASE = os.environ.get("DATABASE_URL", "database.sqlite3")
+DATABASE = os.environ.get("DATABASE_URL", "data/database.sqlite3")
 PING_INTERVAL = int(os.environ.get("PING_INTERVAL", 60))
 
 create_table(DATABASE)
@@ -24,7 +23,7 @@ def ping_ip(ip: str, timeout:float=2) -> float | None:
     return result if isinstance(result, (int, float)) else None
 
 def get_ip_list_full():
-    csv_path = os.path.join(os.path.dirname(__file__), 'server.csv')
+    csv_path = os.path.join(os.path.dirname(__file__), 'data/server.csv')
     ip_list = []
     if os.path.exists(csv_path):
         with open(csv_path, 'r', encoding='utf-8') as f:

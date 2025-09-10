@@ -13,16 +13,14 @@
 
 ### 拉取镜像
 ```bash
-docker pull ghcr.io/<你的用户名>/local-monitor:latest
+docker pull ghcr.io/vpslog/local-monitor:latest
 ```
 
 
 ### 挂载数据库和 server.csv 并启动
 ```bash
 docker run -d --name local-monitor \
-   -v $(pwd)/database.sqlite3:/app/database.sqlite3 \
-   -v $(pwd)/server.csv:/app/server.csv \
-   -e DATABASE_URL=/app/database.sqlite3 \
+   -v $(pwd)/local-monitor:/app/data \
    -e PING_INTERVAL=60 \
    -e NEZHA_API_URL=https://xxxx \
    -e NEZHA_USER=xxxx \
@@ -43,7 +41,7 @@ docker exec local-monitor python3 nezha.py
 ```
 生成后可重启容器：
 ```bash
-docker restart local-monitor
+   如需本地开发，可在 data 目录添加 `data/.env` 文件，内容如下：
 ```
 
 
@@ -60,7 +58,7 @@ docker restart local-monitor
    pip install -r requirements.txt
    ```
 2. 配置节点列表：
-   编辑 `server.csv`，格式如下：
+   编辑 `data/server.csv`，格式如下：
    ```csv
    ip,name,desc
    1.2.3.4,节点A,描述A

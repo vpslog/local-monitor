@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    # 需要添加权限配置，否则报错 installation not allowed to Create organization package
     permissions:
       contents: read
       packages: write    

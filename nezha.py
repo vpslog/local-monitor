@@ -36,18 +36,7 @@ def save_servers_to_csv(servers, csv_path):
         writer.writerow(['ip', 'name', 'desc'])
         writer.writerows(servers)
 
-def get_ip_list():
-    # 直接读取 server.csv
-    csv_path = os.path.join(os.path.dirname(__file__), 'server.csv')
-    ip_list = []
-    if os.path.exists(csv_path):
-        with open(csv_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                ip = row.get('ip')
-                if ip:
-                    ip_list.append(ip)
-    return ip_list
+
 
 def main():
     load_dotenv()
@@ -57,7 +46,7 @@ def main():
     if not api_url or not username or not password:
         print("请在 .env 文件中配置 NEZHA_API_URL, NEZHA_USER, NEZHA_PASSWORD")
         return
-    csv_path = os.path.join(os.path.dirname(__file__), 'server.csv')
+    csv_path = os.path.join(os.path.dirname(__file__), 'data/server.csv')
     jwt = login_and_get_jwt(api_url, username, password)
     servers = fetch_server_info(api_url, jwt)
     save_servers_to_csv(servers, csv_path)

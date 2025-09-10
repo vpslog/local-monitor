@@ -283,13 +283,17 @@
     function drawEChart(selectedIps, allData, chart, periodLabel) {
         let series = [];
         let legend = [];
-        // row[3] 必须为 UTC 格式字符串，new Date(row[3]) 会自动转为本地时间
+        // row[3] 必须为 UTC 格式字符串，显式指定时区显示
+        const displayTimeZone = window.displayTimeZone || 'Asia/Shanghai'; // 可自定义
         selectedIps.forEach(ip => {
             const item = allIps.find(x => x.ip === ip) || { ip };
             const data = allData[ip] || [];
             const seriesData = data
                 .filter(row => row && row.length >= 4 && row[2] !== undefined && row[2] !== null && row[2] !== 'None')
-                .map(row => [new Date(row[3]), row[2]]);
+                .map(row => [
+                    new Date(row[3]).toLocaleString('zh-CN', { timeZone: displayTimeZone }),
+                    row[2]
+                ]);
             const name = showIp ? (item && item.name ? `${item.name}（${item.ip}）` : ip) : (item.name || '');
             legend.push(name);
             series.push({ name, type: 'line', data: seriesData, smooth: true, showSymbol: false, lineStyle: { width: 2 } });

@@ -1,3 +1,4 @@
+
 import os
 import time
 from ping3 import ping
@@ -9,9 +10,9 @@ from flask import Flask, render_template, request, jsonify
 import threading
 
 load_dotenv()
-
-DATABASE = os.getenv("DATABASE_URL", "database.sqlite3")
-PING_INTERVAL = int(os.getenv("PING_INTERVAL", 60))
+# 统一用 os.environ 读取配置，支持 .env 文件和容器传参
+DATABASE = os.environ.get("DATABASE_URL", "database.sqlite3")
+PING_INTERVAL = int(os.environ.get("PING_INTERVAL", 60))
 
 create_table(DATABASE)
 

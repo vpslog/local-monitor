@@ -8,6 +8,52 @@
 - 支持自定义节点列表（server.csv）
 - 历史延迟数据可视化，支持 1小时/24小时/1周 多图展示
 
+## Docker 部署
+本项目已集成 GitHub Actions 自动构建并发布 Docker 镜像到 GitHub Container Registry（ghcr.io）。
+
+### 拉取镜像
+```bash
+docker pull ghcr.io/<你的用户名>/local-monitor:latest
+```
+
+
+### 挂载数据库和 server.csv 并启动
+```bash
+docker run -d --name local-monitor \
+   -v $(pwd)/database.sqlite3:/app/database.sqlite3 \
+   -v $(pwd)/server.csv:/app/server.csv \
+   -e DATABASE_URL=/app/database.sqlite3 \
+   -e PING_INTERVAL=60 \
+   -e NEZHA_API_URL=https://xxxx \
+   -e NEZHA_USER=xxxx \
+   -e NEZHA_PASSWORD=xxxxx \
+   -p 5000:5000 \
+   ghcr.io/<你的用户名>/local-monitor:latest
+```
+> 说明：
+> - `-v $(pwd)/database.sqlite3:/app/database.sqlite3` 挂载本地数据库文件，数据持久化。
+> - `-v $(pwd)/server.csv:/app/server.csv` 挂载节点列表配置。
+> - `-e DATABASE_URL` 指定数据库路径。
+> - `-e PING_INTERVAL` 设置 ping 间隔秒数。
+> - `-e NEZHA_API_URL`、`-e NEZHA_USER`、`-e NEZHA_PASSWORD` 用于哪吒面板自动拉取服务器列表（如需自动生成 server.csv）。
+
+### 生成/更新 server.csv（首次部署或节点变更时）
+```bash
+docker exec local-monitor python3 nezha.py
+```
+生成后可重启容器：
+```bash
+docker restart local-monitor
+```
+
+
+## 环境变量说明
+- `DATABASE_URL`：sqlite3 数据库路径（建议挂载到本机）
+- `PING_INTERVAL`：ping 间隔秒数
+- `NEZHA_API_URL`：哪吒面板 API 地址（如 https://nezha.xxx.com）
+- `NEZHA_USER`：哪吒面板用户名
+- `NEZHA_PASSWORD`：哪吒面板密码（如有特殊字符建议加引号）
+
 ## 快速开始
 1. 安装依赖：
    ```bash
@@ -29,13 +75,3 @@
    ```
 
 4. 浏览器访问 `http://localhost:5000` 查看监控界面。
-
-## 主要文件说明
-- `run.py`：主程序，负责数据采集和 Web 服务
-- `db.py`：数据库操作，延迟数据存储与查询
-- `nezha.py`: 哪吒面板交互
-- `template.html`：前端页面，数据展示与交互
-- `server.csv`：节点列表配置
-- `requirements.txt`：依赖包列表
-
-

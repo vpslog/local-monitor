@@ -11,7 +11,8 @@
 ## Docker 部署
 本项目已集成 GitHub Actions 自动构建并发布 Docker 镜像到 GitHub Container Registry（ghcr.io）。
 
-### 拉取镜像
+### 配置服务器（从Nezha V1 获取）
+
 ```bash
 docker pull ghcr.io/vpslog/local-monitor:latest
 ```
@@ -19,30 +20,28 @@ docker pull ghcr.io/vpslog/local-monitor:latest
 
 ### 挂载数据库和 server.csv 并启动
 ```bash
-docker run -d --name local-monitor \
-   -v $(pwd)/local-monitor:/app/data \
-   -e PING_INTERVAL=60 \
-   -e NEZHA_API_URL=https://xxxx \
-   -e NEZHA_USER=xxxx \
-   -e NEZHA_PASSWORD=xxxxx \
-   -p 5000:5000 \
-   ghcr.io/<你的用户名>/local-monitor:latest
+docker run --rm \
+  -v $(pwd)/local-monitor:/app/data \
+  -e NEZHA_API_URL='XXXX' \
+  -e NEZHA_USER='XXX' \
+  -e NEZHA_PASSWORD='XXXX' \
+  ghcr.io/vpslog/local-monitor:latest python3 nezha.py
 ```
+
 > 说明：
-> - `-v $(pwd)/database.sqlite3:/app/database.sqlite3` 挂载本地数据库文件，数据持久化。
-> - `-v $(pwd)/server.csv:/app/server.csv` 挂载节点列表配置。
-> - `-e DATABASE_URL` 指定数据库路径。
-> - `-e PING_INTERVAL` 设置 ping 间隔秒数。
+> - `-v $(pwd)/local-monitor:/app/data` 挂载本地文件，数据持久化
 > - `-e NEZHA_API_URL`、`-e NEZHA_USER`、`-e NEZHA_PASSWORD` 用于哪吒面板自动拉取服务器列表（如需自动生成 server.csv）。
 
-### 生成/更新 server.csv（首次部署或节点变更时）
+### 运行容器
+
 ```bash
-docker exec local-monitor python3 nezha.py
+docker run -d \
+  -v $(pwd)/local-monitor:/app/data \
+  -p 6001:5000 \
+  --name local-monitor \
+  ghcr.io/vpslog/local-monitor:latest
 ```
-生成后可重启容器：
-```bash
-   如需本地开发，可在 data 目录添加 `data/.env` 文件，内容如下：
-```
+
 
 
 ## 环境变量说明
